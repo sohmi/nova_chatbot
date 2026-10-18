@@ -1,0 +1,26 @@
+
+# Secrets and environment variables
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Node and Vite
+node_modules/
+frontend/dist/
+dist/
+
+# Local tools and generated files
+.vercel/
+*.log
+.DS_Store
