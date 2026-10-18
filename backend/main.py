@@ -38,13 +38,18 @@ MODEL = "openai/gpt-oss-20b"
 
 app = FastAPI(title="Nova AI API")
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://nova-chat-pi.vercel.app",
+    ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "DELETE"],
-    allow_headers=["Content-Type"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
 
 
 # ---------- Request schemas ----------
