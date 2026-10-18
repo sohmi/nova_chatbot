@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import "./App.css";
 import MessageContent from "./MessageContent";
 
-const API_URL = "http://localhost:8000";
+const API_URL = "https://nova-chatbot-2.onrender.com";
 const STORAGE_KEY = "nova_active_conversation";
 
 const suggestions = [
