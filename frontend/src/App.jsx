@@ -273,12 +273,20 @@ async function sendMessage(text = input) {
         throw new Error(data.detail || "Authentication failed.");
       }
 
+      
       const meResponse = await fetch(`${API_URL}/auth/me`, {
         credentials: "include",
       });
+
       if (!meResponse.ok) {
-        throw new Error("Signed in, but could not verify the session. Please try again.");
+        const meData = await meResponse.json().catch(() => ({}));
+        throw new Error(
+          `Session verification failed (${meResponse.status}): ${
+            meData.detail || "Please try again."
+          }`
+        );
       }
+
 
       setUser(await meResponse.json());
       setAuthPassword("");
