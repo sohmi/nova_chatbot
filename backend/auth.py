@@ -13,7 +13,7 @@ from models import User
 load_dotenv()
 
 SECRET_KEY = os.getenv("AUTH_SECRET_KEY")
-COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "true").lower() == "true"
 
 if not SECRET_KEY:
     raise RuntimeError("AUTH_SECRET_KEY is missing from the backend .env file.")
@@ -58,7 +58,7 @@ def set_auth_cookie(response: Response, user_id: int) -> None:
         max_age=int(SESSION_DURATION.total_seconds()),
         httponly=True,
         secure=COOKIE_SECURE,
-        samesite="lax",
+        samesite="none",
         path="/",
     )
 
@@ -70,7 +70,7 @@ def clear_auth_cookie(response: Response) -> None:
         path="/",
         httponly=True,
         secure=COOKIE_SECURE,
-        samesite="lax",
+        samesite="none",
     )
 
 
