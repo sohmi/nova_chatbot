@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+groq
+sqlalchemy
+alembic
+psycopg2-binary
+python-dotenv
+PyJWT
+pwdlib[argon2]
+email-validator
+python-multipart
