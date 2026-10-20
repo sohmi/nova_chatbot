@@ -1,9 +1,10 @@
-
 import { useState, useRef, useEffect } from "react";
 import "./App.css";
 import MessageContent from "./MessageContent";
 
-const API_URL = "https://nova-chatbot-2.onrender.com";
+const API_URL = import.meta.env.DEV
+  ? (import.meta.env.VITE_API_URL || "https://nova-chatbot-2.onrender.com")
+  : "/api";
 const STORAGE_KEY = "nova_active_conversation";
 
 const suggestions = [
@@ -26,6 +27,8 @@ function App() {
   const [authMode, setAuthMode] = useState("login");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const bottomRef = useRef(null);
 
@@ -85,6 +88,24 @@ function App() {
 
     initialize();
   }, []);
+
+  // Keep the mobile navigation drawer accessible and prevent background scrolling.
+  useEffect(() => {
+    if (!sidebarOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleEscape(event) {
+      if (event.key === "Escape") setSidebarOpen(false);
+    }
+
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [sidebarOpen]);
 
   // Scroll to the latest message.
   useEffect(() => {
@@ -326,6 +347,8 @@ async function sendMessage(text = input) {
       setInput("");
       localStorage.removeItem(STORAGE_KEY);
       setAuthMode("login");
+      setShowPassword(false);
+      setSidebarOpen(false);
     } catch (err) {
       setError(err.message || "Could not log out.");
     }
@@ -345,6 +368,7 @@ async function sendMessage(text = input) {
     setMessages([]);
     setInput("");
     setError("");
+    setSidebarOpen(false);
     localStorage.removeItem(STORAGE_KEY);
   }
 
@@ -354,6 +378,7 @@ async function sendMessage(text = input) {
     try {
       setError("");
       await loadConversation(id);
+      setSidebarOpen(false);
     } catch (err) {
       setError(err.message || "Could not open conversation.");
     }
@@ -461,19 +486,31 @@ async function sendMessage(text = input) {
               disabled={authBusy}
             />
             <label htmlFor="nova-password" style={authStyles.label}>Password</label>
-            <input
-              id="nova-password"
-              type="password"
-              autoComplete={isRegister ? "new-password" : "current-password"}
-              required
-              minLength={isRegister ? 12 : 1}
-              maxLength={128}
-              value={authPassword}
-              onChange={(event) => setAuthPassword(event.target.value)}
-              placeholder={isRegister ? "At least 12 characters" : "Enter your password"}
-              style={authStyles.input}
-              disabled={authBusy}
-            />
+            <div style={authStyles.passwordWrap}>
+              <input
+                id="nova-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete={isRegister ? "new-password" : "current-password"}
+                required
+                minLength={isRegister ? 12 : 1}
+                maxLength={128}
+                value={authPassword}
+                onChange={(event) => setAuthPassword(event.target.value)}
+                placeholder={isRegister ? "At least 12 characters" : "Enter your password"}
+                style={{ ...authStyles.input, paddingRight: "52px" }}
+                disabled={authBusy}
+              />
+              <button
+                type="button"
+                style={authStyles.passwordToggle}
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                disabled={authBusy}
+              >
+                {showPassword ? "◉" : "◎"}
+              </button>
+            </div>
             {error && <p role="alert" style={{ ...authStyles.error, marginTop: 16 }}>{error}</p>}
             <button type="submit" style={{ ...authStyles.submit, opacity: authBusy ? 0.7 : 1 }} disabled={authBusy}>
               {authBusy ? "Please wait…" : isRegister ? "Create account" : "Sign in"}
@@ -484,7 +521,7 @@ async function sendMessage(text = input) {
             <button
               type="button"
               style={authStyles.switchButton}
-              onClick={() => { setAuthMode(isRegister ? "login" : "register"); setError(""); }}
+              onClick={() => { setAuthMode(isRegister ? "login" : "register"); setShowPassword(false); setError(""); }}
               disabled={authBusy}
             >
               {isRegister ? "Sign in" : "Create an account"}
@@ -496,13 +533,31 @@ async function sendMessage(text = input) {
   }
 
   return (
-    <div className="app">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-icon">✳</div>
-          <span>
-            nova<span className="brand-accent">.ai</span>
-          </span>
+    <div className={`app${sidebarOpen ? " sidebar-visible" : ""}`}>
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="sidebar-backdrop"
+          aria-label="Close navigation menu"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      <aside id="nova-sidebar" className={`sidebar${sidebarOpen ? " sidebar-open" : ""}`} aria-label="Conversation navigation">
+        <div className="brand-row">
+          <div className="brand">
+            <div className="brand-icon" aria-hidden="true">✳</div>
+            <span>
+              nova<span className="brand-accent">.ai</span>
+            </span>
+          </div>
+          <button
+            type="button"
+            className="sidebar-close"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close navigation menu"
+          >
+            ×
+          </button>
         </div>
 
         <button className="new-chat" onClick={startNewChat}>
@@ -576,34 +631,43 @@ async function sendMessage(text = input) {
           )}
         </div>
 
-        <div className="sidebar-note">
-          <span className="status-dot" />
-          Your AI assistant is ready
-        </div>
-
         <div className="sidebar-bottom">
-          <div className="avatar">{(user.email || "U").charAt(0).toUpperCase()}</div>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <strong>{user.email}</strong>
-            <p>Signed in</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={loading || authBusy}
-            title="Log out"
-            aria-label="Log out"
-            style={authStyles.logout}
-          >
-            ↪
-          </button>
-        </div>
+  <div className="avatar">
+    {(user.email || "U").charAt(0).toUpperCase()}
+  </div>
+
+  <div className="account-details">
+    <strong title={user.email}>{user.email}</strong>
+    <p>Signed in</p>
+  </div>
+
+  <button
+    type="button"
+    className="signout-button"
+    onClick={handleLogout}
+    disabled={loading || authBusy}
+    title="Sign out of Nova AI"
+  >
+    <span aria-hidden="true">↪</span>
+    <span>Sign out</span>
+  </button>
+</div>
       </aside>
 
       <main className="main">
         <header className="topbar">
-          <div>
-            <span className="mobile-brand">✳ Nova AI</span>
+          <div className="topbar-leading topbar-title-group">
+            <button
+              type="button"
+              className="mobile-menu-button"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open conversation menu"
+              aria-controls="nova-sidebar"
+              aria-expanded={sidebarOpen}
+            >
+              <span aria-hidden="true">☰</span>
+            </button>
+            <span className="mobile-brand"><span className="mobile-brand-icon" aria-hidden="true">✳</span>Nova AI</span>
             <span className="desktop-label">General assistant</span>
           </div>
           <span className="model-label">AI Chat</span>
@@ -744,6 +808,22 @@ const authStyles = {
   heading: { fontSize: "27px", margin: "0 0 8px", letterSpacing: "-.7px" },
   muted: { color: "#a1a1b5", lineHeight: 1.5, margin: "0 0 24px" },
   label: { display: "block", fontSize: "13px", fontWeight: 600, margin: "16px 0 8px", color: "#d4d4e0" },
+  passwordWrap: { position: "relative", width: "100%" },
+  passwordToggle: {
+    position: "absolute",
+    top: 0,
+    right: "5px",
+    width: "42px",
+    height: "100%",
+    display: "grid",
+    placeItems: "center",
+    border: 0,
+    borderRadius: "8px",
+    background: "transparent",
+    color: "#b9a2ff",
+    fontSize: "20px",
+    cursor: "pointer",
+  },
   input: {
     display: "block",
     width: "100%",
