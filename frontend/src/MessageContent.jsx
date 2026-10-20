@@ -22,22 +22,29 @@ function CodeBlock({ language, code }) {
         </button>
       </div>
 
-      <SyntaxHighlighter
-        language={language || "text"}
-        style={vscDarkPlus}
-        PreTag="div"
-        customStyle={{
-          margin: 0,
-          padding: "16px",
-          background: "#0d0f14",
-          fontSize: "13px",
-          lineHeight: 1.65,
-          overflowX: "auto",
-        }}
-        wrapLongLines={false}
-      >
-        {code}
-      </SyntaxHighlighter>
+     <SyntaxHighlighter
+      language={language || "text"}
+      style={vscDarkPlus}
+      PreTag="div"
+      codeTagProps={{
+        style: {
+          background: "transparent",
+          color: "inherit",
+        },
+      }}
+      customStyle={{
+        margin: 0,
+        padding: "16px",
+        background: "#11131b",
+        color: "#d4d4d4",
+        fontSize: "13px",
+        lineHeight: 1.65,
+        overflowX: "auto",
+      }}
+      wrapLongLines={false}
+    >
+      {code}
+    </SyntaxHighlighter>
     </div>
   );
 }

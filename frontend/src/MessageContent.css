@@ -122,8 +122,26 @@
   overflow-x: auto;
   border-radius: 8px;
 }
-/* Fix unwanted backgrounds on Prism syntax tokens */
-.code-block .token {
+/* Dark syntax-highlighted code blocks */
+.code-block pre {
+  margin: 0 !important;
+  max-width: 100%;
+  background: #11131b !important;
+}
+
+.code-block pre code {
   background: transparent !important;
-  background-color: transparent !important;
+}
+
+/* Unhighlighted code while Nova streams */
+.markdown-content .streaming-code {
+  margin: 0;
+  padding: 16px;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: #11131b !important;
+  color: #d4d4d4;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.65;
 }
