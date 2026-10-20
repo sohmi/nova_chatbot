@@ -122,3 +122,8 @@
   overflow-x: auto;
   border-radius: 8px;
 }
+/* Fix unwanted backgrounds on Prism syntax tokens */
+.code-block .token {
+  background: transparent !important;
+  background-color: transparent !important;
+}
