@@ -18,9 +18,24 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    password_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    email = Column(
+        String(255),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
+
+    password_hash = Column(
+        String(255),
+        nullable=False,
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
 
     conversations = relationship(
         "Conversation",
@@ -28,7 +43,6 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
-    # Persistent memories belonging to this user.
     memories = relationship(
         "UserMemory",
         back_populates="user",
@@ -36,13 +50,25 @@ class User(Base):
         order_by="UserMemory.updated_at",
     )
 
-
 class Conversation(Base):
     __tablename__ = "conversations"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False, default="New chat")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+        index=True,
+    )
 
     # Nullable temporarily so existing conversations remain intact.
     user_id = Column(
@@ -63,7 +89,6 @@ class Conversation(Base):
         cascade="all, delete-orphan",
         order_by="ChatMessage.id",
     )
-
 
 class ChatMessage(Base):
     __tablename__ = "messages"

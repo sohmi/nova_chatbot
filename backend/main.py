@@ -7,6 +7,8 @@ from pwdlib import PasswordHash
 import re
 from models import User, Conversation, ChatMessage, UserMemory
 
+from datetime import datetime
+
 from auth import (
     clear_auth_cookie,
     get_current_user,
@@ -412,7 +414,10 @@ def list_conversations(
         conversations = (
             db.query(Conversation)
             .filter(Conversation.user_id == current_user.id)
-            .order_by(Conversation.created_at.desc())
+            .order_by(
+                Conversation.updated_at.desc(),
+                Conversation.id.desc(),
+            )
             .all()
         )
 
@@ -421,6 +426,7 @@ def list_conversations(
                 "id": conversation.id,
                 "title": conversation.title,
                 "created_at": conversation.created_at,
+                "updated_at": conversation.updated_at,
             }
             for conversation in conversations
         ]
@@ -612,11 +618,16 @@ async def chat(
         conversation_id = conversation.id
 
         user_message = ChatMessage(
-            conversation_id=conversation_id,
-            role="user",
-            content=latest_user_message.content,
-        )
+        conversation_id=conversation_id,
+        role="user",
+        content=latest_user_message.content,
+       )
+
         db.add(user_message)
+
+        # Update the conversation's last activity.
+        conversation.updated_at = datetime.utcnow()
+
         db.commit()
 
         # Load conversation history from the database, not the browser.
@@ -848,7 +859,7 @@ async def chat(
                             "content": content,
                         })
 
-            # Save the assistant response.
+            # Save the assistant response and update conversation activity.
             if full_reply:
                 with SessionLocal() as db:
                     assistant_message = ChatMessage(
@@ -856,7 +867,21 @@ async def chat(
                         role="assistant",
                         content=full_reply,
                     )
+
                     db.add(assistant_message)
+
+                    conversation = (
+                        db.query(Conversation)
+                        .filter(
+                            Conversation.id == conversation_id,
+                            Conversation.user_id == current_user.id,
+                        )
+                        .first()
+                    )
+
+                    if conversation is not None:
+                        conversation.updated_at = datetime.utcnow()
+
                     db.commit()
 
             # Tell the frontend the response is complete.
