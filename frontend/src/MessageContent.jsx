@@ -93,3 +93,4 @@ export default function MessageContent({ content = "", isStreaming = false }) {
     </div>
   );
 }
+

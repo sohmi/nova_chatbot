@@ -105,3 +105,29 @@
   .markdown-content table { font-size: 12px; }
   .markdown-content th, .markdown-content td { min-width: 100px; max-width: 240px; padding: 8px 10px; }
 }
+/* Fix code block background and syntax highlighting */
+.code-block pre,
+.code-block pre > code,
+.code-block pre code,
+.code-block pre span {
+  background-color: transparent;
+}
+
+.code-block pre {
+  background: #11131b !important;
+  color: #d4d4d4 !important;
+}
+
+/* Preserve the syntax colors provided by Prism */
+.code-block pre span {
+  background-color: transparent !important;
+}
+
+/* Keep streaming code readable */
+.markdown-content .streaming-code {
+  background: #11131b !important;
+  color: #d4d4d4 !important;
+  padding: 16px;
+  overflow-x: auto;
+  border-radius: 8px;
+}
