@@ -29,7 +29,7 @@ function CodeBlock({ language, code }) {
         customStyle={{
           margin: 0,
           padding: "16px",
-          background: "#11131b",
+          background: "#a9adbd",
           fontSize: "13px",
           lineHeight: 1.65,
           overflowX: "auto",
