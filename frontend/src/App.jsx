@@ -151,6 +151,8 @@ async function sendMessage(text = input) {
     ...messages,
     { role: "user", content },
   ];
+  let assistantReply = "";
+  let streamFrameId = null;
 
   setMessages([
     ...updatedMessages,
@@ -160,6 +162,29 @@ async function sendMessage(text = input) {
   setInput("");
   setError("");
   setLoading(true);
+
+  // Batch streamed text updates to at most one React update per animation frame.
+  function scheduleStreamUpdate() {
+    if (streamFrameId !== null) return;
+    streamFrameId = window.requestAnimationFrame(() => {
+      streamFrameId = null;
+      setMessages([
+        ...updatedMessages,
+        { role: "assistant", content: assistantReply },
+      ]);
+    });
+  }
+
+  function flushStreamUpdate() {
+    if (streamFrameId !== null) {
+      window.cancelAnimationFrame(streamFrameId);
+      streamFrameId = null;
+    }
+    setMessages([
+      ...updatedMessages,
+      { role: "assistant", content: assistantReply },
+    ]);
+  }
 
   try {
     const response = await fetch(`${API_URL}/chat`, {
@@ -191,7 +216,6 @@ async function sendMessage(text = input) {
     const decoder = new TextDecoder();
     let buffer = "";
     let streamCompleted = false;
-    let assistantReply = "";
 
     async function processEvent(eventText) {
       const dataLines = eventText
@@ -205,11 +229,7 @@ async function sendMessage(text = input) {
 
       if (event.type === "chunk") {
         assistantReply += event.content;
-
-        setMessages([
-          ...updatedMessages,
-          { role: "assistant", content: assistantReply },
-        ]);
+        scheduleStreamUpdate();
       } else if (event.type === "done") {
         streamCompleted = true;
 
@@ -264,6 +284,8 @@ async function sendMessage(text = input) {
     message || "Unable to reach Nova AI. Check the backend."
   );
 } finally {
+  // Preserve any text received even if the stream ends with an error.
+  if (assistantReply) flushStreamUpdate();
   setLoading(false);
 }
 
@@ -717,7 +739,10 @@ async function sendMessage(text = input) {
                     <span className="message-author">
                       {message.role === "assistant" ? "Nova" : "You"}
                     </span>
-                    <MessageContent content={message.content} />
+                    <MessageContent
+                      content={message.content}
+                      isStreaming={loading && message.role === "assistant" && index === messages.length - 1}
+                    />
                   </div>
                 </article>
               ))}

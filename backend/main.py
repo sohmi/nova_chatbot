@@ -44,7 +44,6 @@ app = FastAPI(title="Nova AI API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
         "https://nova-chat-pi.vercel.app",
     ],
     allow_credentials=True,

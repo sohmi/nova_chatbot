@@ -1,4 +1,3 @@
-
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -43,7 +42,7 @@ function CodeBlock({ language, code }) {
   );
 }
 
-export default function MessageContent({ content = "" }) {
+export default function MessageContent({ content = "", isStreaming = false }) {
   return (
     <div className="markdown-content">
       <ReactMarkdown
@@ -63,6 +62,16 @@ export default function MessageContent({ content = "" }) {
             const isBlock = Boolean(match) || String(children).includes("\n");
 
             if (isBlock) {
+              // Avoid repeatedly running syntax highlighting on incomplete code.
+              // The final render restores the normal highlighted code block.
+              if (isStreaming) {
+                return (
+                  <pre className="streaming-code">
+                    <code>{code}</code>
+                  </pre>
+                );
+              }
+
               return (
                 <CodeBlock
                   language={match?.[1]?.toLowerCase() || ""}
